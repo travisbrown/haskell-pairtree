@@ -2,14 +2,16 @@ module Data.Pairtree.Mapping
   ( clean
   , unclean
   ) where
-import qualified Data.ByteString.Lazy as B
-import Data.ByteString.Lazy (ByteString)
+import qualified Data.ByteString as B
+import Data.ByteString (ByteString)
 import Data.Char (chr, digitToInt)
 import Data.Monoid (mappend)
-import Data.Text.Lazy (Text)
-import Data.Text.Lazy.Encoding (decodeUtf8, encodeUtf8)
+import Data.Text (Text)
+import qualified Data.Text as T
+import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Data.Text.Format (left)
 import Data.Text.Format.Types (Hex (Hex))
+import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Lazy.Builder as TB (singleton, toLazyText)
 import Data.Word (Word8)
 
@@ -30,6 +32,8 @@ problemChar w = w < 0x21 || w > 0x7e
 hexEncode :: Word8 -> ByteString
 hexEncode
   = encodeUtf8
+  . T.concat
+  . LT.toChunks
   . TB.toLazyText
   . (mappend $ TB.singleton '^')
   . left 2 '0'
@@ -54,6 +58,9 @@ unclean = decodeUtf8 . snd . B.foldl unescape (Plain, B.empty) . encodeUtf8
     unescape (First p, current) w = (Plain, B.snoc current $ p + asHex2 w)
     unescape (Plain, current) w
       | w == 0x5e = (Escaped, current)
+      | w == 0x3d = (Plain, B.snoc current 0x2f)
+      | w == 0x2b = (Plain, B.snoc current 0x3a)
+      | w == 0x2c = (Plain, B.snoc current 0x2e)
       | otherwise = (Plain, B.snoc current w)
 
     asHex1 = (16 *) . fromIntegral . digitToInt . chr . fromIntegral

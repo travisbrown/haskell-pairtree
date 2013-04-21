@@ -7,7 +7,7 @@ import Data.List (partition)
 import qualified Data.Map as M
 import Data.Monoid (mappend)
 import Data.Pairtree.Mapping (unclean)
-import Data.Text.Lazy (Text, pack)
+import Data.Text (Text, pack)
 import Data.Typeable (Typeable)
 import System.Directory (getDirectoryContents)
 import System.FilePath ((</>))
